@@ -1,38 +1,36 @@
-
+# https://github.com/symfony-doge/gogs-docker-compose
 version: '2'
 
 services:
     app:
         build:
-            context: ./docker/${APP_ENV}/app
-            args:
-                GOGS_VERSION: ${GOGS_VERSION}
-                APP_TIMEZONE: ${APP_TIMEZONE}
+            context: .
         networks:
-            - gogs
+            - gogs_db
         depends_on:
             - db
         ports:
             - "9090:3000"
             - "9022:22"
         volumes:
-            - app_data:${GOGS_DATA_DIR}
-            - ${APP_PATH}/var/logs:${GOGS_LOGS_DIR}
+            - app_data:/data
 
     db:
-        image: postgres:${POSTGRES_VERSION}
+        image: postgres:11
         networks:
-            - gogs
+            - gogs_db
         environment:
-            POSTGRES_DB: ${POSTGRES_DB}
-            POSTGRES_USER: ${POSTGRES_USER}
-            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-            PGDATA: ${POSTGRES_DATA_DIR}
+            POSTGRES_DB: gogs
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            PGDATA: /var/lib/postgresql/data
         volumes:
-            - db_data:${POSTGRES_DATA_DIR}
+            - db_data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
 
 networks:
-    gogs:
+    gogs_db:
         driver: bridge
 
 volumes:
