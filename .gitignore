@@ -5,5 +5,5 @@
 !data/app/.gitkeep
 
 /data/db/*
-!data/db/.gitkeep
+!data/db/data/.gitkeep
 
