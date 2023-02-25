@@ -12,8 +12,8 @@ services:
         ports:
             - "3000:3000"
             - "2222:22"
-#        volumes:
-#            - app_data:/data
+        volumes:
+            - app_data:/data
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.gogs.rule=Host(${SERVER_DOMAIN})"
@@ -28,8 +28,8 @@ services:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
             PGDATA: /var/lib/postgresql/data
-#        volumes:
-#            - db_data:/var/lib/postgresql/data
+        volumes:
+            - db_data:/var/lib/postgresql/data
         ports:
             - "5432:5432"
 
