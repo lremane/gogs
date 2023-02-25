@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export $(echo $(cat .env | sed 's/#.*//g'| xargs) | envsubst)
 
 rm -f data/db/data/.gitkeep
