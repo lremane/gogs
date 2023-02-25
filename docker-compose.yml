@@ -1,36 +1,71 @@
 # https://github.com/symfony-doge/gogs-docker-compose
-version: '2'
+version: '3'
 
 services:
     app:
         build:
             context: .
         networks:
-            - gogs_db
+            - gogs_db_traefik
         depends_on:
             - db
         ports:
-            - "9090:3000"
-            - "9022:22"
-        volumes:
-            - app_data:/data
+            - "3000:3000"
+            - "2222:22"
+#        volumes:
+#            - app_data:/data
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.gogs.rule=Host(${SERVER_DOMAIN})"
+            - "traefik.http.services.gogs.loadbalancer.server.port=3000"
 
     db:
         image: postgres:11
         networks:
-            - gogs_db
+            - gogs_db_traefik
         environment:
             POSTGRES_DB: gogs
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
             PGDATA: /var/lib/postgresql/data
-        volumes:
-            - db_data:/var/lib/postgresql/data
+#        volumes:
+#            - db_data:/var/lib/postgresql/data
         ports:
             - "5432:5432"
 
+    traefik:
+      image: traefik:v2.9
+      container_name: "traefik"
+      command:
+        - "--api.insecure=true"
+        - "--providers.docker"
+        - "--providers.docker.exposedbydefault=false"
+        - "--entrypoints.http.address=:80"
+        - "--entrypoints.http.http.redirections.entrypoint.to=https"
+        - "--entrypoints.http.http.redirections.entrypoint.scheme=https"
+        - "--entrypoints.https.address=:443"
+        - "--entrypoints.https.http.tls.certResolver=le"
+        - "--certificatesresolvers.le.acme.tlschallenge=true"
+        - "--certificatesresolvers.le.acme.email=${ACME_EMAIL}"
+        - "--certificatesresolvers.le.acme.storage=acme.json"
+        - "--certificatesresolvers.le.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+        - "--accesslog=true"
+        - "--log.level=DEBUG"
+
+      ports:
+        - "80:80"
+        - "8080:8080"
+        - "443:443"
+      volumes:
+        # So that Traefik can listen to the Docker events
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        - "./acme.json:/acme.json"
+      networks:
+        - gogs_db_traefik
+
+
 networks:
-    gogs_db:
+    gogs_db_traefik:
         driver: bridge
 
 volumes:
